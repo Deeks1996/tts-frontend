@@ -20,7 +20,6 @@ function Register() {
     {
       toast.success("Registration successful! Redirecting...", { position: "top-right", autoClose: 2000 });
   
-        // Delay navigation to allow toast to show
         setTimeout(() => {
           navigate("/tts");
         }, 2000);

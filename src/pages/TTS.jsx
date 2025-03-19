@@ -1,4 +1,3 @@
-// frontend/src/pages/TTSPage.jsx
 import { useState, useEffect } from "react";
 import { supabase } from "../api/supabaseClient";
 import axios from "axios";
@@ -7,7 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { FaFileUpload, FaMicrophone } from "react-icons/fa";
 import LogoutButton from '../components/Logout';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://your-backend.vercel.app";
 
 function TTSPage() {
   const [text, setText] = useState("");

@@ -1,4 +1,3 @@
-// frontend/src/components/LogoutButton.jsx
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../api/supabaseClient";
 import { FaPowerOff } from "react-icons/fa";
