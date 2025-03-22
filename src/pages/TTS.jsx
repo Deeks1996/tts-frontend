@@ -7,6 +7,7 @@ import { FaFileUpload, FaMicrophone } from "react-icons/fa";
 import LogoutButton from '../components/Logout';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://tts-backend-five.vercel.app";
+const MAX_CHAR_LIMIT = 2000;
 
 function TTSPage() {
   const [text, setText] = useState("");
@@ -28,40 +29,54 @@ function TTSPage() {
   const handleFileUpload = (e) => {
     const uploadedFile = e.target.files[0];
     if (uploadedFile && uploadedFile.type === "text/plain") {
-      setFile(uploadedFile);
-      setText("");
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const fileContent = event.target.result;
+        if (fileContent.length > MAX_CHAR_LIMIT) {
+          toast.error(`File exceeds ${MAX_CHAR_LIMIT} characters!`, { position: "top-right", autoClose: 2000 });
+          setFile(null);
+        } else {
+          setFile(uploadedFile);
+          setText(""); 
+        }
+      };
+      reader.readAsText(uploadedFile);
     } else {
-      toast.error('Please upload a valid .txt file.',{position:"top-right",autoClose:2000});
+      toast.error('Please upload a valid .txt file.', { position: "top-right", autoClose: 2000 });
     }
   };
 
   const handleTTSConversion = async () => {
     if (!text && !file) {
-      alert("Please enter text or upload a file");
+      toast.error("Please enter text or upload a file", { position: "top-right", autoClose: 2000 });
       return;
     }
 
     setLoading(true);
 
-    let inputText = text;
     if (file) {
       const reader = new FileReader();
       reader.onload = async (event) => {
-        inputText = event.target.result;
-        await processTTS(inputText);
+        const fileText = event.target.result;
+        if (fileText.length > MAX_CHAR_LIMIT) {
+          toast.error(`Text exceeds ${MAX_CHAR_LIMIT} characters!`, { position: "top-right", autoClose: 2000 });
+          setLoading(false);
+          return;
+        }
+        await processTTS(fileText);
       };
       reader.readAsText(file);
+    } else if (text.length <= MAX_CHAR_LIMIT) {
+      await processTTS(text);
     } else {
-      await processTTS(inputText);
+      toast.error(`Text exceeds ${MAX_CHAR_LIMIT} characters!`, { position: "top-right", autoClose: 2000 });
+      setLoading(false);
     }
   };
 
-
   const processTTS = async (inputText) => {
     try {
-      const response = await axios.post(`${BACKEND_URL}/tts/convert`, 
-        { text: inputText }, 
-        {
+      const response = await axios.post(`${BACKEND_URL}/tts/convert`, { text: inputText }, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -70,15 +85,14 @@ function TTSPage() {
 
       if (response.data.audioUrl) {
         setAudioUrl(response.data.audioUrl);
-        toast.success("TTS Conversion successfull",{position:"top-right",autoClose:2000});
-      } 
-      else {
+        toast.success("TTS Conversion successful", { position: "top-right", autoClose: 2000 });
+      } else {
         toast.error("TTS Conversion failed!", { position: "top-right" });
       }
     } catch (error) {
-      console.log(error);
-    }
-    finally{
+      console.error(error);
+      toast.error("An error occurred. Try again!", { position: "top-right", autoClose: 2000 });
+    } finally {
       setLoading(false);
     }
   };
